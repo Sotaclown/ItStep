@@ -22,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
@@ -35,7 +35,21 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
               "WhenOpened": "2026-05-26T15:10:29.747Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\user\\Desktop\\networks\\TCP\\TCP\\Program.cs",
+              "RelativeDocumentMoniker": "TCP\\Program.cs",
+              "ToolTip": "C:\\Users\\user\\Desktop\\networks\\TCP\\TCP\\Program.cs",
+              "RelativeToolTip": "TCP\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-01T20:03:48.4Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
@@ -58,19 +72,7 @@
               "ToolTip": "C:\\Users\\user\\Desktop\\networks\\TCP\\TCP\\TCP.csproj",
               "RelativeToolTip": "TCP\\TCP.csproj",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-06-01T19:40:27.232Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\user\\Desktop\\networks\\TCP\\TCP\\Program.cs",
-              "RelativeDocumentMoniker": "TCP\\Program.cs",
-              "ToolTip": "C:\\Users\\user\\Desktop\\networks\\TCP\\TCP\\Program.cs",
-              "RelativeToolTip": "TCP\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA2AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-26T15:07:42.649Z",
+              "WhenOpened": "2026-06-01T19:40:27.232Z",
               "EditorCaption": ""
             }
           ]

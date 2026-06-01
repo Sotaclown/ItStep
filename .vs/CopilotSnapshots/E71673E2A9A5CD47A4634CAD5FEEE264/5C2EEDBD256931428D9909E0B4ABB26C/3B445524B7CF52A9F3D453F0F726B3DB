@@ -1,134 +1,123 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
+/// <summary>
+/// TCP Чат Сервер - прості багатокористувацький чат на основі TCP протоколу
+/// Дозволяє кільком клієнтам підключитися та обмінюватися повідомленнями
+/// </summary>
 namespace TCP;
 
 class Program
 {
-    // Блокування для безпечної роботи з потоками
+    /// <summary>
+    /// Об'єкт блокування для потокобезпечного доступу до list_clients
+    /// Запобігає конфліктам при одночасній роботі кількох потоків
+    /// </summary>
     static readonly object _lock = new object();
-    // Список активних клієнтів
-    static readonly Dictionary<int, TcpClient> list_clients = new();
 
+    /// <summary>
+    /// Словник для зберігання всіх активних підключень клієнтів
+    /// Ключ - унікальний ID клієнта, Значення - об'єкт TcpClient
+    /// </summary>
+    static readonly Dictionary<int, TcpClient> list_clients = new();
     static async Task Main(string[] args)
     {
-        // Встановлюємо українське кодування
+        // Встановлюємо кодування консолі для українських символів
         Console.InputEncoding = Encoding.UTF8;
         Console.OutputEncoding = Encoding.UTF8;
         int countClients = 1;
 
         Console.WriteLine("-----Server TCP-------");
-
-        // Отримуємо ім'я комп'ютера
+        // Отримуємо ім'я хоста
         var hostName = Dns.GetHostName();
         Console.WriteLine($"Host Name: {hostName}");
-
-        // Отримуємо всі IP адреси
+        // Отримуємо всі IP адреси для цього хоста
         var localhost = await Dns.GetHostEntryAsync(hostName);
         var count = localhost.AddressList.Length;
+        // За замовчуванням використовуємо останню IP адресу
         var ip = localhost.AddressList[count - 1];
         int i = 0;
-
-        // Показуємо вибір IP адрес
         Console.WriteLine("Enter IP address:");
+        // Виводимо всі доступні IP адреси
         foreach(var addr in localhost.AddressList )
             Console.WriteLine($"{i++}.{addr}");
-
         Console.Write($"({ip})->: ");
         var temp = Console.ReadLine();
-
-        // Дозволяємо вибрати іншу IP
+        // Дозволяємо користувачу вибрати іншу IP адресу
         if(!string.IsNullOrEmpty(temp))
             ip = IPAddress.Parse(temp);
-
         int port = 4789;
         Console.Title = $"Ваш айпі {ip}:{port}";
-
-        // Запускаємо сервер на вибраній IP та порту
+        // Створюємо та запускаємо TCP слухач
         TcpListener socketServer = new TcpListener(ip, port);
         socketServer.Start();
         Console.WriteLine($"Server started on {ip}:{port}");
-
-        // Основний цикл - чекаємо нових клієнтів
+        // Основний цикл сервера - приймаємо підключення клієнтів
         while (true)
         {
-            // Приймаємо клієнта
+            // Приймаємо вхідне підключення клієнта
             TcpClient client = socketServer.AcceptTcpClient();
-
-            // Додаємо клієнта до списку (потокобезпечно)
+            // Додаємо нового клієнта до списку
             lock (_lock) 
             {
                 list_clients.Add(countClients, client);
             }
-
             Console.WriteLine($"на сервер підключився клієнт: {client.Client.RemoteEndPoint}");
-
-            // Створюємо новий потік для цього клієнта
+            // Створюємо новий потік для обробки цього клієнта
             Thread t = new Thread(handle_clients);
             t.Start(countClients);
             countClients++;
         }
     }
 
-    // Обробник для кожного клієнта
+    // Метод для обробки повідомлень від клієнта
     public static void handle_clients(object c)
     {
         int id = (int)c;
         TcpClient client;
-
         // Отримуємо клієнта зі списку
         lock (_lock) 
         {
             client = list_clients[id];
         }
-
         try
         {
-            // Цикл для читання повідомлень від клієнта
+            // Читаємо дані від клієнта
             while (true)
             {
                 NetworkStream strm = client.GetStream();
                 var buffer = new byte[10240];
                 int byte_count = strm.Read(buffer);
-
                 // Якщо 0 байт - клієнт відключився
                 if (byte_count == 0)
                     break;
-
-                // Перетворюємо байти в текст
                 string data = Encoding.UTF8.GetString(buffer, 0, byte_count);
                 Console.WriteLine($"Клієнт {client.Client.RemoteEndPoint} відправив: {data} ");
-
-                // Відправляємо повідомлення всім клієнтам
+                // Розсилаємо повідомлення всім клієнтам
                 brodcast(data);
             }
         }
         catch { }
-
-        // Видаляємо клієнта зі списку
+        // Видаляємо клієнта зі списку при відключенні
         lock(_lock)
         {
             Console.WriteLine($"Чат покинув клієнт {client.Client.RemoteEndPoint}");
             list_clients.Remove(id);
         }
-
-        // Закриваємо з'єднання
         client.Client.Shutdown(SocketShutdown.Both);
         client.Close();
     }
 
-    // Відправляє повідомлення всім клієнтам
+    // Метод для розсилання повідомлення всім клієнтам
     public static void brodcast(string data)
     {
-        // Перетворюємо строку в байти
         byte[] buffer = Encoding.UTF8.GetBytes(data);
-
         lock (_lock)
         {
             try
             {
-                // Проходимо по всіх клієнтів та відправляємо дані
+                // Відправляємо дані кожному клієнту
                 foreach (var c in list_clients.Values)
                 {
                     NetworkStream stream = c.GetStream();
