@@ -1,0 +1,120 @@
+﻿using System.Net;
+using System.Net.Sockets;
+using System.Text;
+
+// TCP Серверна Програма
+namespace TCP;
+
+class Program
+{
+    // Об'єкт блокування для синхронізації потоків
+    static readonly object _lock = new object();
+    // Словник для зберігання підключених клієнтів
+    static readonly Dictionary<int, TcpClient> list_clients = new();
+    static async Task Main(string[] args)
+    {
+        // Встановлюємо кодування консолі для українських символів
+        Console.InputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
+        int countClients = 1;
+
+        Console.WriteLine("-----Server TCP-------");
+        // Отримуємо ім'я хоста
+        var hostName = Dns.GetHostName();
+        Console.WriteLine($"Host Name: {hostName}");
+        // Отримуємо всі IP адреси для цього хоста
+        var localhost = await Dns.GetHostEntryAsync(hostName);
+        var count = localhost.AddressList.Length;
+        // За замовчуванням використовуємо останню IP адресу
+        var ip = localhost.AddressList[count - 1];
+        int i = 0;
+        Console.WriteLine("Enter IP address:");
+        // Виводимо всі доступні IP адреси
+        foreach(var addr in localhost.AddressList )
+            Console.WriteLine($"{i++}.{addr}");
+        Console.Write($"({ip})->: ");
+        var temp = Console.ReadLine();
+        // Дозволяємо користувачу вибрати іншу IP адресу
+        if(!string.IsNullOrEmpty(temp))
+            ip = IPAddress.Parse(temp);
+        int port = 4789;
+        Console.Title = $"Ваш айпі {ip}:{port}";
+        // Створюємо та запускаємо TCP слухач
+        TcpListener socketServer = new TcpListener(ip, port);
+        socketServer.Start();
+        Console.WriteLine($"Server started on {ip}:{port}");
+        // Основний цикл сервера - приймаємо підключення клієнтів
+        while (true)
+        {
+            // Приймаємо вхідне підключення клієнта
+            TcpClient client = socketServer.AcceptTcpClient();
+            // Додаємо нового клієнта до списку
+            lock (_lock) 
+            {
+                list_clients.Add(countClients, client);
+            }
+            Console.WriteLine($"на сервер підключився клієнт: {client.Client.RemoteEndPoint}");
+            // Створюємо новий потік для обробки цього клієнта
+            Thread t = new Thread(handle_clients);
+            t.Start(countClients);
+            countClients++;
+        }
+    }
+
+    // Метод для обробки повідомлень від клієнта
+    public static void handle_clients(object c)
+    {
+        int id = (int)c;
+        TcpClient client;
+        // Отримуємо клієнта зі списку
+        lock (_lock) 
+        {
+            client = list_clients[id];
+        }
+        try
+        {
+            // Читаємо дані від клієнта
+            while (true)
+            {
+                NetworkStream strm = client.GetStream();
+                var buffer = new byte[10240];
+                int byte_count = strm.Read(buffer);
+                // Якщо 0 байт - клієнт відключився
+                if (byte_count == 0)
+                    break;
+                string data = Encoding.UTF8.GetString(buffer, 0, byte_count);
+                Console.WriteLine($"Клієнт {client.Client.RemoteEndPoint} відправив: {data} ");
+                // Розсилаємо повідомлення всім клієнтам
+                brodcast(data);
+            }
+        }
+        catch { }
+        // Видаляємо клієнта зі списку при відключенні
+        lock(_lock)
+        {
+            Console.WriteLine($"Чат покинув клієнт {client.Client.RemoteEndPoint}");
+            list_clients.Remove(id);
+        }
+        client.Client.Shutdown(SocketShutdown.Both);
+        client.Close();
+    }
+
+    // Метод для розсилання повідомлення всім клієнтам
+    public static void brodcast(string data)
+    {
+        byte[] buffer = Encoding.UTF8.GetBytes(data);
+        lock (_lock)
+        {
+            try
+            {
+                // Відправляємо дані кожному клієнту
+                foreach (var c in list_clients.Values)
+                {
+                    NetworkStream stream = c.GetStream();
+                    stream.Write(buffer);
+                }
+            }
+            catch { }
+        }
+    }
+}

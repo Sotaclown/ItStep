@@ -1,0 +1,100 @@
+﻿using System.Net;
+using System.Net.Sockets;
+using System.Text;
+
+
+namespace TCP;
+
+class Program
+{
+    // для блокування потоку 
+    static readonly object _lock = new object();
+    static readonly Dictionary<int, TcpClient> list_clients = new();
+    static async Task Main(string[] args)
+    {
+
+        Console.InputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
+        int countClients = 1;
+
+        Console.WriteLine("-----Server TCP-------");
+        var hostName = Dns.GetHostName();
+        Console.WriteLine($"Host Name: {hostName}");
+        var localhost = await Dns.GetHostEntryAsync(hostName);
+        var count = localhost.AddressList.Length;
+        var ip = localhost.AddressList[count - 1];
+        int i = 0;
+        Console.WriteLine("Enter IP address:");
+        foreach(var addr in localhost.AddressList )
+            Console.WriteLine($"{i++}.{addr}");
+        Console.Write($"({ip})->: ");
+        var temp = Console.ReadLine();
+        if(!string.IsNullOrEmpty(temp))
+            ip = IPAddress.Parse(temp);
+        int port = 4789;
+        Console.Title = $"Ваш айпі {ip}:{port}";
+        TcpListener socketServer = new TcpListener(ip, port);
+        socketServer.Start();
+        Console.WriteLine($"Server started on {ip}:{port}");
+        while (true)
+        {
+            TcpClient client = socketServer.AcceptTcpClient();
+            lock (_lock) 
+            {
+                list_clients.Add(countClients, client);
+            }
+            Console.WriteLine($"на сервер підключився клієнт: {client.Client.RemoteEndPoint}");
+            Thread t = new Thread(handle_clients);
+            t.Start(countClients);
+            countClients++;
+        }
+    }
+    // обробник для клs'ynsd
+    public static void handle_clients(object c)
+    {
+        int id = (int)c;
+        TcpClient client;
+        lock (_lock) 
+        {
+            client = list_clients[id];
+        }
+        try
+        {
+            while (true)
+            {
+                NetworkStream strm = client.GetStream();
+                var buffer = new byte[10240];
+                int byte_count = strm.Read(buffer);
+                if (byte_count == 0)
+                    break;
+                string data = Encoding.UTF8.GetString(buffer, 0, byte_count);
+                Console.WriteLine($"Клієнт {client.Client.RemoteEndPoint} відправив: {data} ");
+                brodcast(data);
+            }
+        }
+        catch { }
+        lock(_lock)
+        {
+            Console.WriteLine($"Чат покинув клієнт {client.Client.RemoteEndPoint}");
+            list_clients.Remove(id);
+        }
+        client.Client.Shutdown(SocketShutdown.Both);
+        client.Close();
+    }
+    public static void brodcast(string data)
+    {
+        byte[] buffer = Encoding.UTF8.GetBytes(data);
+        lock (_lock)
+        {
+            try
+            {
+                foreach (var c in list_clients.Values)
+                {
+                    NetworkStream stream = c.GetStream();
+                    stream.Write(buffer);
+                }
+            }
+            catch { }
+        }
+    }
+}

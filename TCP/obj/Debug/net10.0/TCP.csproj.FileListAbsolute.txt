@@ -1,0 +1,14 @@
+C:\Users\user\Desktop\networks\TCP\TCP\bin\Debug\net10.0\TCP.exe
+C:\Users\user\Desktop\networks\TCP\TCP\bin\Debug\net10.0\TCP.deps.json
+C:\Users\user\Desktop\networks\TCP\TCP\bin\Debug\net10.0\TCP.runtimeconfig.json
+C:\Users\user\Desktop\networks\TCP\TCP\bin\Debug\net10.0\TCP.dll
+C:\Users\user\Desktop\networks\TCP\TCP\bin\Debug\net10.0\TCP.pdb
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.AssemblyInfoInputs.cache
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.AssemblyInfo.cs
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.csproj.CoreCompileInputs.cache
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.dll
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\refint\TCP.dll
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.pdb
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\TCP.genruntimeconfig.cache
+C:\Users\user\Desktop\networks\TCP\TCP\obj\Debug\net10.0\ref\TCP.dll
